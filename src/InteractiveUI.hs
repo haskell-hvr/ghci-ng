@@ -19,6 +19,10 @@ module InteractiveUI (
 
 #include "HsVersions.h"
 
+-- GHCi-ng
+import qualified Paths_ghci_ng
+import Data.Version (showVersion)
+
 -- GHCi
 import qualified GhciMonad ( args, runStmt )
 import GhciMonad hiding ( args, runStmt )
@@ -123,6 +127,7 @@ defaultGhciSettings =
 
 ghciWelcomeMsg :: String
 ghciWelcomeMsg = "GHCi, version " ++ cProjectVersion ++
+                 " [NG/" ++ showVersion Paths_ghci_ng.version ++ "]" ++
                  ": http://www.haskell.org/ghc/  :? for help"
 
 cmdName :: Command -> String
