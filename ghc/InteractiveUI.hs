@@ -21,6 +21,9 @@ module InteractiveUI ( interactiveUI, ghciWelcomeMsg ) where
 
 #include "HsVersions.h"
 
+import qualified Paths_ghci_ng
+import Data.Version (showVersion)
+
 import qualified GhciMonad
 import GhciMonad hiding ( runStmt )
 import GhciTags
@@ -104,6 +107,7 @@ import Data.IORef ( IORef, readIORef, writeIORef )
 
 ghciWelcomeMsg :: String
 ghciWelcomeMsg = "GHCi, version " ++ cProjectVersion ++
+                 " [NG/" ++ showVersion Paths_ghci_ng.version ++ "]" ++
                  ": http://www.haskell.org/ghc/  :? for help"
 
 cmdName :: Command -> String
