@@ -25,6 +25,9 @@ import GHC		( -- DynFlags(..), HscTarget(..),
 			  LoadHowMuch(..) )
 import CmdLineParser
 
+-- ghc-paths
+import qualified GHC.Paths
+
 -- Implementations of the various modes (--show-iface, mkdependHS. etc.)
 import LoadIface	( showIface )
 import HscMain          ( newHscEnv )
@@ -87,7 +90,7 @@ main = do
    hSetBuffering stdout NoBuffering
    GHC.defaultErrorHandler defaultLogAction $ do
     -- 1. extract the -B flag from the args
-    argv0 <- getArgs
+    argv0 <- fmap (("--interactive" :) . (("-B" ++ GHC.Paths.libdir) :)) getArgs
 
     let (minusB_args, argv1) = partition ("-B" `isPrefixOf`) argv0
         mbMinusB | null minusB_args = Nothing
