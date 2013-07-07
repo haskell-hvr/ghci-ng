@@ -103,6 +103,12 @@ import GHC.TopHandler
 
 import Data.IORef ( IORef, readIORef, writeIORef )
 
+-- backported (available in base-4.6)
+readMaybe :: Read a => String -> Maybe a
+readMaybe s = case reads s of
+    [(x,s')] | all isSpace s' -> Just x
+    _                         -> Nothing
+
 -----------------------------------------------------------------------------
 
 ghciWelcomeMsg :: String
