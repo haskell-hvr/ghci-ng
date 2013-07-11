@@ -727,7 +727,7 @@ runOneCommand eh gCmd = do
     collectCommand q c = q >>=
       maybe (liftIO (ioError collectError))
             (\l->if removeSpaces l == ":}"
-                 then return (Just $ removeSpaces c)
+                 then return (Just c)
                  else collectCommand q (c ++ "\n" ++ map normSpace l))
       where normSpace '\r' = ' '
             normSpace   x  = x
@@ -746,17 +746,28 @@ runOneCommand eh gCmd = do
 
     -- haskell
     doCommand stmt = do
+      -- if 'stmt' was entered via ':{' it will contain '\n's
+      let stmt_nl_cnt = length [ () | '\n' <- stmt ]
       ml <- lift $ isOptionSet Multiline
-      if ml
+      if ml && stmt_nl_cnt == 0 -- don't trigger automatic multi-line mode for ':{'-multiline input
         then do
+          fst_line_num <- lift (line_number <$> getGHCiState)
           mb_stmt <- checkInputForLayout stmt gCmd
           case mb_stmt of
             Nothing      -> return $ Just True
             Just ml_stmt -> do
+              -- temporarily compensate line-number for multi-line input
+              saved_line_num <- lift (line_number <$> getGHCiState)
+              lift $ getGHCiState >>= \st' -> setGHCiState st'{ line_number = fst_line_num }
               result <- timeIt $ lift $ runStmt ml_stmt GHC.RunToCompletion
+              lift $ getGHCiState >>= \st' -> setGHCiState st'{ line_number = saved_line_num }
               return $ Just result
         else do
+          let line_ofs = if stmt_nl_cnt > 0 then stmt_nl_cnt + 1 else 0
+          -- temporarily compensate line-number for multi-line input
+          lift $ getGHCiState >>= \st' -> setGHCiState st'{ line_number = line_number st' - line_ofs }
           result <- timeIt $ lift $ runStmt stmt GHC.RunToCompletion
+          lift $ getGHCiState >>= \st' -> setGHCiState st'{ line_number = line_number st' + line_ofs }
           return $ Just result
 
 -- #4316
