@@ -1,5 +1,5 @@
 name: ghci-ng
-version: 7.6.3.2
+version: 7.6.3.3
 license: BSD3
 license-file: LICENSE
 author: The GHC Team
@@ -18,8 +18,21 @@ description:
     Currently, @ghci-ng@ has the following additional features
     compared to the vanilla @ghci-7.6.3@ program:
     .
-    * @:complete@ command for non-interactive completion
-      (proposed for GHC 7.8.1, <http://ghc.haskell.org/trac/ghc/ticket/5687>)
+    * backported @:complete@ command for non-interactive completion
+      (see <http://ghc.haskell.org/trac/ghc/ticket/5687 GHC#5687>)
+    .
+    * backported customizable continuation prompt (@:set prompt2@)
+      and bugfix for `:set +m`-style completion
+      (see <http://ghc.haskell.org/trac/ghc/ticket/8076 GHC#8076>)
+    .
+    * Support for @%l@ line-number prompt substitution
+      (proposed for GHC 7.8, <http://ghc.haskell.org/trac/ghc/ticket/8047 GHC#8047>)
+    .
+    * Add `:show linker` command to `:help` output
+      (<http://ghc.haskell.org/trac/ghc/ticket/8074 GHC#8074>)
+    .
+    * Add missing `:show imports` to completion table
+      (<http://ghc.haskell.org/trac/ghc/ticket/8075 GHC#7075>)
 
 extra-source-files: ghc/HsVersions.h rts/PosixSource.h
 
