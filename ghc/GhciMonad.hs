@@ -65,7 +65,7 @@ data GHCiState = GHCiState
         progname       :: String,
         args           :: [String],
         prompt         :: String,
-        def_prompt     :: String,
+        prompt2        :: String,
         editor         :: String,
         stop           :: String,
         options        :: [GHCiOption],
