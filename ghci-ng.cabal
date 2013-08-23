@@ -33,6 +33,9 @@ description:
     .
     * Add missing `:show imports` to completion table
       (<http://ghc.haskell.org/trac/ghc/ticket/8075 GHC#7075>)
+    .
+    * Fix GHCi macros not shadowing builtins
+      (<http://ghc.haskell.org/trac/ghc/ticket/8113 GHC#8113>)
 
 extra-source-files: ghc/HsVersions.h rts/PosixSource.h
 
