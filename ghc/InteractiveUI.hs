@@ -709,7 +709,7 @@ runOneCommand eh gCmd = do
                             (\c -> case removeSpaces c of
                                      ""   -> noSpace q
                                      ":{" -> multiLineCmd q
-                                     _    -> return (Just c) )
+                                     c'   -> return (Just c') )
     multiLineCmd q = do
       st <- lift getGHCiState
       let p = prompt st
@@ -739,7 +739,7 @@ runOneCommand eh gCmd = do
     doCommand :: String -> InputT GHCi (Maybe Bool)
 
     -- command
-    doCommand stmt | (':' : cmd) <- removeSpaces stmt = do
+    doCommand (':' : cmd) = do
       result <- specialCommand cmd
       case result of
         True -> return Nothing
@@ -758,34 +758,18 @@ runOneCommand eh gCmd = do
             Nothing      -> return $ Just True
             Just ml_stmt -> do
               -- temporarily compensate line-number for multi-line input
-              result <- timeIt $ lift $ runStmtWithLineNum fst_line_num ml_stmt GHC.RunToCompletion
+              saved_line_num <- lift (line_number <$> getGHCiState)
+              lift $ getGHCiState >>= \st' -> setGHCiState st'{ line_number = fst_line_num }
+              result <- timeIt $ lift $ runStmt ml_stmt GHC.RunToCompletion
+              lift $ getGHCiState >>= \st' -> setGHCiState st'{ line_number = saved_line_num }
               return $ Just result
-        else do -- single line input and :{-multiline input
-          last_line_num <- lift (line_number <$> getGHCiState)
-          -- reconstruct first line num from last line num and stmt
-          let fst_line_num | stmt_nl_cnt > 0 = saved_line_num - (stmt_nl_cnt + 1) + (stmt_nl_cnt - stmt_nl_cnt2)
-                           | otherwise = last_line_num -- single line input
-              stmt_nl_cnt2 = length [ () | '\n' <- stmt' ]
-              stmt' = dropLeadingWhiteLines stmt
+        else do
+          let line_ofs = if stmt_nl_cnt > 0 then stmt_nl_cnt + 1 else 0
           -- temporarily compensate line-number for multi-line input
-          result <- timeIt $ lift $ runStmtWithLineNum fst_line_num stmt' GHC.RunToCompletion
+          lift $ getGHCiState >>= \st' -> setGHCiState st'{ line_number = line_number st' - line_ofs }
+          result <- timeIt $ lift $ runStmt stmt GHC.RunToCompletion
+          lift $ getGHCiState >>= \st' -> setGHCiState st'{ line_number = line_number st' + line_ofs }
           return $ Just result
-
-    -- runStmt wrapper for temporarily overridden line-number
-    runStmtWithLineNum :: Int -> String -> SingleStep -> GHCi Bool
-    runStmtWithLineNum lnum stmt step = do
-        st0 <- getGHCiState
-        setGHCiState st0 { line_number = lnum }
-        result <- runStmt stmt step
-        -- restore original line_number
-        getGHCiState >>= \st -> setGHCiState st { line_number = line_number st0 }
-        return result
-
-    -- note: this is subtly different from 'unlines . dropWhile (all isSpace) . lines'
-    dropLeadingWhiteLines s | (l0,'\n':r) <- break (=='\n') s
-                            , all isSpace l0 = dropLeadingWhiteLines r
-                            | otherwise = s
-
 
 -- #4316
 -- lex the input.  If there is an unclosed layout context, request input
